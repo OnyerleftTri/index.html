@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Triathlon RaceDay — a throwback show presented by ONYERLEFT. Pro Series coverage, hot takes, rankings, and race-week chaos." />
+  <title>Triathlon RaceDay</title>
+
+  <!-- Simple favicon (optional). Replace with your own later. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23008080'/%3E%3Ctext x='10' y='42' font-size='28' fill='white'%3ETRD%3C/text%3E%3C/svg%3E">
+
+  <style>
+    :root{
+      --desktop:#008080;
+      --chrome:#C0C0C0;
+      --dark:#404040;
+      --darker:#202020;
+      --light:#FFFFFF;
+      --title:#000080;
+      --titleText:#FFFFFF;
+      --text:#000000;
+      --link:#0000EE;
+      --shadow: rgba(0,0,0,.25);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: Tahoma, Verdana, Segoe UI, system-ui, -apple-system, sans-serif;
+      background: var(--desktop);
+      color: var(--text);
+      overflow:hidden;
+    }
+
+    /* Boot screen */
+    .boot{
+      position:fixed; inset:0;
+      background: #000;
+      color: #cfcfcf;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      z-index:9999;
+    }
+    .boot-inner{
+      width:min(720px, 92vw);
+      border:2px solid #222;
+      padding:18px;
+      background:#050505;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    .boot h1{
+      margin:0 0 10px;
+      font-size:18px;
+      color:#fff;
+      letter-spacing:.2px;
+    }
+    .boot p{
+      margin:8px 0;
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    /* Win98 UI primitives */
+    .bevel{
+      background: var(--chrome);
+      border-top:2px solid var(--light);
+      border-left:2px solid var(--light);
+      border-right:2px solid var(--dark);
+      border-bottom:2px solid var(--dark);
+    }
+    .inset{
+      background:#fff;
+      border-top:2px solid var(--dark);
+      border-left:2px solid var(--dark);
+      border-right:2px solid var(--light);
+      border-bottom:2px solid var(--light);
+    }
+    .btn{
+      cursor:pointer;
+      padding:6px 10px;
+      font-size:12px;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background: var(--chrome);
+      border-top:2px solid var(--light);
+      border-left:2px solid var(--light);
+      border-right:2px solid var(--dark);
+      border-bottom:2px solid var(--dark);
+    }
+    .btn:active{
+      border-top:2px solid var(--dark);
+      border-left:2px solid var(--dark);
+      border-right:2px solid var(--light);
+      border-bottom:2px solid var(--light);
+      transform: translateY(1px);
+    }
+    a{ color: var(--link); }
+    a:hover{ text-decoration:none; }
+
+    /* Desktop */
+    .desktop{
+      position:fixed; inset:0;
+      padding:18px 18px 46px 18px;
+    }
+    .icons{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap:14px;
+      width:min(520px, 92vw);
+    }
+    .icon{
+      width:92px;
+      text-align:center;
+      color:#fff;
+      cursor:pointer;
+      user-select:none;
+      padding:8px 6px;
+      border:1px solid transparent;
+    }
+    .icon:focus, .icon:hover{
+      border:1px dotted rgba(255,255,255,.85);
+      background: rgba(255,255,255,.08);
+      outline:none;
+    }
+    .icon svg{
+      display:block;
+      margin:0 auto 6px;
+      width:38px;
+      height:38px;
+      filter: drop-shadow(0 2px 0 rgba(0,0,0,.25));
+    }
+    .icon-label{
+      font-size:12px;
+      line-height:1.15;
+      text-shadow: 0 1px 0 rgba(0,0,0,.35);
+      word-break:break-word;
+    }
+
+    /* Taskbar */
+    .taskbar{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      height:46px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:6px;
+      background: var(--chrome);
+      border-top:2px solid var(--light);
+      box-shadow: 0 -6px 20px rgba(0,0,0,.18);
+    }
+    .start{
+      width:auto;
+      font-weight:700;
+    }
+    .clock{
+      margin-left:auto;
+      padding:6px 10px;
+      font-size:12px;
+      background: var(--chrome);
+      border-top:2px solid var(--dark);
+      border-left:2px solid var(--dark);
+      border-right:2px solid var(--light);
+      border-bottom:2px solid var(--light);
+      min-width:92px;
+      text-align:center;
+    }
+    .taskchip{
+      display:none;
+      padding:6px 10px;
+      font-size:12px;
+      max-width:420px;
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+    }
+    .taskchip.show{ display:inline-flex; }
+
+    /* Windows */
+    .window{
+      position:absolute;
+      top:80px; left:60px;
+      width:min(860px, calc(100vw - 36px));
+      max-height: calc(100vh - 110px);
+      display:none;
+      flex-direction:column;
+      box-shadow: 10px 14px 0 var(--shadow);
+    }
+    .window.show{ display:flex; }
+    .titlebar{
+      background: var(--title);
+      color: var(--titleText);
+      padding:6px 8px;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .titlebar .title{
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .titlebar .controls{
+      margin-left:auto;
+      display:flex;
+      gap:6px;
+    }
+    .winbtn{
+      width:22px; height:18px;
+      display:grid;
+      place-items:center;
+      font-size:12px;
+      color:#000;
+      background: var(--chrome);
+      border-top:2px solid var(--light);
+      border-left:2px solid var(--light);
+      border-right:2px solid var(--dark);
+      border-bottom:2px solid var(--dark);
+      cursor:pointer;
+    }
+    .content{
+      padding:12px;
+      overflow:auto;
+      background: var(--chrome);
+    }
+
+    .panel{
+      padding:10px;
+      margin:0 0 10px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:10px;
+    }
+    @media (max-width: 860px){
+      body{ overflow:auto; }
+      .desktop{ position:relative; min-height:100vh; overflow:visible; padding-bottom:70px; }
+      .window{ position:relative; top:auto; left:auto; margin-top:14px; width:100%; max-height:none; }
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    h2{
+      margin:0 0 8px;
+      font-size:14px;
+    }
+    p{
+      margin:6px 0;
+      font-size:12.5px;
+      line-height:1.45;
+    }
+    .muted{ color:#222; opacity:.9; }
+
+    .list{
+      margin:8px 0 0;
+      padding-left:16px;
+      font-size:12.5px;
+      line-height:1.45;
+    }
+
+    .cardrow{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    .card{
+      padding:10px;
+      background:#fff;
+    }
+    .card h3{
+      margin:0 0 6px;
+      font-size:13px;
+    }
+    .tag{
+      display:inline-block;
+      font-size:11px;
+      padding:2px 6px;
+      background: #efefef;
+      border:1px solid #d0d0d0;
+      margin-right:6px;
+    }
+
+    .field{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+    input[type="email"], input[type="text"]{
+      font-size:12.5px;
+      padding:7px 8px;
+      width:min(340px, 100%);
+      border-top:2px solid var(--dark);
+      border-left:2px solid var(--dark);
+      border-right:2px solid var(--light);
+      border-bottom:2px solid var(--light);
+      outline:none;
+    }
+
+    .footer-note{
+      font-size:11px;
+      opacity:.8;
+      margin-top:10px;
+    }
+
+    /* YouTube responsive */
+    .video{
+      position:relative;
+      padding-bottom:56.25%;
+      height:0;
+      overflow:hidden;
+      background:#000;
+      border-top:2px solid var(--dark);
+      border-left:2px solid var(--dark);
+      border-right:2px solid var(--light);
+      border-bottom:2px solid var(--light);
+    }
+    .video iframe{
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      border:0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Boot screen -->
+  <div class="boot" id="boot">
+    <div class="boot-inner">
+      <h1>TRIATHLON RACEday.exe</h1>
+      <p>Loading: hot takes, pro rankings, and questionable pacing decisions…</p>
+      <p class="muted">Presented by ONYERLEFT • “It’s serious, but we’re not.”</p>
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" id="enterBtn" type="button">Enter</button>
+        <a class="btn" href="#watch" id="skipBtn" style="text-decoration:none;">Skip to Latest Episode</a>
+      </div>
+      <p class="footer-note">Tip: This site is intentionally retro. If you experience nostalgia, that’s a feature.</p>
+    </div>
+  </div>
+
+  <div class="desktop" id="desktop">
+    <!-- Icons -->
+    <div class="icons" aria-label="Desktop icons">
+      <div class="icon" tabindex="0" data-open="watchWin">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="10" y="14" width="44" height="36" rx="3" fill="#C0C0C0" stroke="#fff"/>
+          <polygon points="28,25 28,39 42,32" fill="#000080"/>
+        </svg>
+        <div class="icon-label">Watch Latest</div>
+      </div>
+
+      <div class="icon" tabindex="0" data-open="episodesWin">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="14" y="14" width="36" height="36" rx="2" fill="#C0C0C0" stroke="#fff"/>
+          <rect x="20" y="22" width="24" height="4" fill="#000080"/>
+          <rect x="20" y="30" width="24" height="4" fill="#000080"/>
+          <rect x="20" y="38" width="18" height="4" fill="#000080"/>
+        </svg>
+        <div class="icon-label">Episodes</div>
+      </div>
+
+      <div class="icon" tabindex="0" data-open="sponsorsWin">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="14" y="18" width="36" height="28" rx="2" fill="#C0C0C0" stroke="#fff"/>
+          <circle cx="24" cy="32" r="6" fill="#000080"/>
+          <rect x="34" y="28" width="12" height="8" fill="#000080"/>
+        </svg>
+        <div class="icon-label">Sponsors</div>
+      </div>
+
+      <div class="icon" tabindex="0" data-open="aboutWin">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="18" y="14" width="28" height="36" rx="2" fill="#C0C0C0" stroke="#fff"/>
+          <circle cx="32" cy="26" r="6" fill="#000080"/>
+          <rect x="24" y="36" width="16" height="4" fill="#000080"/>
+        </svg>
+        <div class="icon-label">About</div>
+      </div>
+
+      <div class="icon" tabindex="0" data-open="pressWin">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="16" y="14" width="32" height="36" rx="2" fill="#C0C0C0" stroke="#fff"/>
+          <rect x="20" y="22" width="24" height="4" fill="#000080"/>
+          <rect x="20" y="30" width="24" height="4" fill="#000080"/>
+          <rect x="20" y="38" width="14" height="4" fill="#000080"/>
+        </svg>
+        <div class="icon-label">Press Kit</div>
+      </div>
+
+      <div class="icon" tabindex="0" data-open="contactWin">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="12" y="18" width="40" height="28" rx="2" fill="#C0C0C0" stroke="#fff"/>
+          <path d="M12 20 L32 34 L52 20" stroke="#000080" stroke-width="3" />
+        </svg>
+        <div class="icon-label">Contact</div>
+      </div>
+    </div>
+
+    <!-- Windows -->
+    <div class="window bevel" id="watchWin" style="top:70px; left:56px;">
+      <div class="titlebar" data-drag="watchWin">
+        <span class="title">Watch Latest — Triathlon RaceDay</span>
+        <div class="controls">
+          <div class="winbtn" data-min="watchWin">_</div>
+          <div class="winbtn" data-close="watchWin">X</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="grid">
+          <div>
+            <div class="panel inset">
+              <h2 id="watch">Latest Episode</h2>
+              <p class="muted">Replace the YouTube video ID in the embed below with your latest episode.</p>
+              <div class="video" aria-label="YouTube embed">
+                <!-- Replace VIDEO_ID_HERE with your YouTube video id -->
+                <iframe
+                  src="https://www.youtube.com/embed/VIDEO_ID_HERE"
+                  title="Triathlon RaceDay — Latest Episode"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen>
+                </iframe>
+              </div>
+              <div class="field">
+                <a class="btn" href="https://www.youtube.com/@ONYERLEFT" target="_blank" rel="noreferrer">Open YouTube Channel</a>
+                <a class="btn" href="#episodes" onclick="openWin('episodesWin')">More Episodes</a>
+              </div>
+            </div>
+
+            <div class="panel inset">
+              <h2>What this show is</h2>
+              <p><strong>Triathlon RaceDay</strong> is a throwback-style pro triathlon show: rankings, race-week coverage, and the parts of the sport you only admit out loud in group chat.</p>
+              <p class="muted">Produced by ONYERLEFT • Built for fans who love the sport… and also love making fun of it.</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel inset">
+              <h2>Get the episode drop</h2>
+              <p class="muted">One email when a new episode goes live. No spam. No inspiration quotes.</p>
+
+              <!-- EMAIL SIGNUP: choose ONE approach below -->
+
+              <!-- Approach 1: Formspree (easiest). Create a Formspree form and paste your endpoint. -->
+              <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+                <div class="field">
+                  <input type="email" name="email" placeholder="you@fastmail.com" required />
+                  <button class="btn" type="submit">Sign Up</button>
+                </div>
+              </form>
+
+              <p class="footer-note">Replace the Formspree URL with your own endpoint.</p>
+            </div>
+
+            <div class="panel inset">
+              <h2>Show partners</h2>
+              <p class="muted">Want your logo on this desktop? Let’s talk.</p>
+              <div class="field">
+                <a class="btn" href="#sponsors" onclick="openWin('sponsorsWin')">Sponsor Info</a>
+                <a class="btn" href="#press" onclick="openWin('pressWin')">Press Kit</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="window bevel" id="episodesWin" style="top:110px; left:120px;">
+      <div class="titlebar" data-drag="episodesWin">
+        <span class="title">Episodes</span>
+        <div class="controls">
+          <div class="winbtn" data-min="episodesWin">_</div>
+          <div class="winbtn" data-close="episodesWin">X</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="panel inset">
+          <h2 id="episodes">Latest drops</h2>
+          <p class="muted">Add links as you publish. Keep it simple: newest at the top.</p>
+          <ul class="list">
+            <li><a href="#" target="_blank" rel="noreferrer">Episode Title (paste YouTube link)</a> — <span class="muted">Feb 2026</span></li>
+            <li><a href="#" target="_blank" rel="noreferrer">Episode Title</a> — <span class="muted">Feb 2026</span></li>
+            <li><a href="#" target="_blank" rel="noreferrer">Episode Title</a> — <span class="muted">Jan 2026</span></li>
+          </ul>
+          <div class="field">
+            <a class="btn" href="https://www.youtube.com/@ONYERLEFT" target="_blank" rel="noreferrer">Browse on YouTube</a>
+          </div>
+        </div>
+
+        <div class="panel inset">
+          <h2>Segments you can expect</h2>
+          <div class="cardrow">
+            <div class="card inset">
+              <h3>Power Rankings</h3>
+              <span class="tag">Spicy</span><span class="tag">Unnecessary</span>
+              <p class="muted">We rank the pro field like it’s a 2003 ESPN graphic and we’ve had three coffees.</p>
+            </div>
+            <div class="card inset">
+              <h3>Race-week breakdown</h3>
+              <span class="tag">Useful</span><span class="tag">Fan-first</span>
+              <p class="muted">Course, tactics, storylines, and what actually matters when the gun goes off.</p>
+            </div>
+            <div class="card inset">
+              <h3>Draft Zone Court</h3>
+              <span class="tag">Satire</span><span class="tag">Allegedly</span>
+              <p class="muted">We present the evidence. The internet convicts. Everyone loses.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="window bevel" id="sponsorsWin" style="top:90px; left:220px;">
+      <div class="titlebar" data-drag="sponsorsWin">
+        <span class="title">Sponsors</span>
+        <div class="controls">
+          <div class="winbtn" data-min="sponsorsWin">_</div>
+          <div class="winbtn" data-close="sponsorsWin">X</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="panel inset">
+          <h2 id="sponsors">Partner with Triathlon RaceDay</h2>
+          <p><strong>This show is built for the real audience:</strong> fans who actually watch races, argue about tactics, and buy gear without needing a motivational quote first.</p>
+          <ul class="list">
+            <li><strong>Host reads + integrated bits</strong> (not “hi guys use code” copy/paste)</li>
+            <li><strong>On-screen logo placement</strong> (desktop icons, lower thirds, show bumpers)</li>
+            <li><strong>Episode + clip distribution</strong> (YouTube, IG, Shorts)</li>
+            <li><strong>Optional email inclusion</strong> (episode drop list)</li>
+          </ul>
+          <p class="muted">Replace these with your real sponsor details once you decide packages.</p>
+        </div>
+
+        <div class="panel inset">
+          <h2>Current / Featured Partners</h2>
+          <div class="cardrow">
+            <div class="card inset">
+              <h3>Title Sponsor</h3>
+              <p class="muted">Your logo here — “Presented by ______”</p>
+            </div>
+            <div class="card inset">
+              <h3>Official Sponsor</h3>
+              <p class="muted">Your logo here — segment sponsor</p>
+            </div>
+            <div class="card inset">
+              <h3>Supporting Partner</h3>
+              <p class="muted">Your logo here — clip + social mention</p>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <a class="btn" href="#contact" onclick="openWin('contactWin')">Inquire about sponsorship</a>
+            <a class="btn" href="#press" onclick="openWin('pressWin')">Download press kit</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="window bevel" id="aboutWin" style="top:140px; left:80px;">
+      <div class="titlebar" data-drag="aboutWin">
+        <span class="title">About</span>
+        <div class="controls">
+          <div class="winbtn" data-min="aboutWin">_</div>
+          <div class="winbtn" data-close="aboutWin">X</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="panel inset">
+          <h2>Triathlon RaceDay</h2>
+          <p>A weekly-ish show built around the <strong>Pro Series</strong>, big races, and the storylines that actually move the sport.</p>
+          <p class="muted">Think: old broadcast vibes, new-school internet pacing.</p>
+        </div>
+
+        <div class="panel inset">
+          <h2>Produced by ONYERLEFT</h2>
+          <p>ONYERLEFT is a triathlon culture brand: coverage, comedy, and content for people who love endurance sports and also live online.</p>
+          <div class="field">
+            <a class="btn" href="https://www.youtube.com/@ONYERLEFT" target="_blank" rel="noreferrer">ONYERLEFT on YouTube</a>
+            <a class="btn" href="#" target="_blank" rel="noreferrer">ONYERLEFT on Instagram</a>
+          </div>
+          <p class="footer-note">Replace Instagram link with your actual handle URL.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="window bevel" id="pressWin" style="top:120px; left:180px;">
+      <div class="titlebar" data-drag="pressWin">
+        <span class="title">Press Kit</span>
+        <div class="controls">
+          <div class="winbtn" data-min="pressWin">_</div>
+          <div class="winbtn" data-close="pressWin">X</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="panel inset" id="press">
+          <h2>Press kit / media kit</h2>
+          <p class="muted">Upload your PDF somewhere (Google Drive, Dropbox, your site) and paste the link below.</p>
+          <div class="field">
+            <a class="btn" href="#" target="_blank" rel="noreferrer">Download Press Kit (PDF)</a>
+            <a class="btn" href="#contact" onclick="openWin('contactWin')">Contact</a>
+          </div>
+          <p class="footer-note">Tip: include show concept, audience, reach, sponsor tiers, and past partner logos.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="window bevel" id="contactWin" style="top:160px; left:240px;">
+      <div class="titlebar" data-drag="contactWin">
+        <span class="title">Contact</span>
+        <div class="controls">
+          <div class="winbtn" data-min="contactWin">_</div>
+          <div class="winbtn" data-close="contactWin">X</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="panel inset" id="contact">
+          <h2>Reach out</h2>
+          <p class="muted">Use this for sponsor inquiries, show guests, media, or “please review this penalty” submissions.</p>
+
+          <!-- Contact form via Formspree -->
+          <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+            <div class="field">
+              <input type="text" name="name" placeholder="Name" required />
+              <input type="email" name="email" placeholder="Email" required />
+            </div>
+            <div class="field">
+              <input type="text" name="message" placeholder="Message (ex: sponsor inquiry / guest idea / etc.)" required style="width:min(700px, 100%);" />
+              <button class="btn" type="submit">Send</button>
+            </div>
+          </form>
+
+          <p class="footer-note">
+            Replace the Formspree URL with your own. Or just put a direct email link:
+            <a href="mailto:YOUR@EMAIL.COM">YOUR@EMAIL.COM</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Taskbar -->
+  <div class="taskbar bevel" role="navigation" aria-label="Taskbar">
+    <button class="btn start" type="button" id="startBtn">Start</button>
+    <div class="taskchip bevel" id="taskChip">Triathlon RaceDay</div>
+    <div class="clock" id="clock">--:--</div>
+  </div>
+
+  <script>
+    // Boot -> desktop
+    const boot = document.getElementById('boot');
+    const enterBtn = document.getElementById('enterBtn');
+    const skipBtn = document.getElementById('skipBtn');
+
+    function enter(){
+      boot.style.display = 'none';
+      // Open watch window by default on desktop view
+      if (window.innerWidth > 860) openWin('watchWin');
+    }
+
+    enterBtn.addEventListener('click', enter);
+    skipBtn.addEventListener('click', () => {
+      boot.style.display='none';
+      openWin('watchWin');
+    });
+
+    // Clock
+    const clock = document.getElementById('clock');
+    function tick(){
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      clock.textContent = `${hh}:${mm}`;
+    }
+    tick(); setInterval(tick, 1000 * 15);
+
+    // Windows open/close/minimize
+    const taskChip = document.getElementById('taskChip');
+    function openWin(id){
+      // Close all others on mobile to reduce scroll chaos
+      if (window.innerWidth <= 860){
+        document.querySelectorAll('.window').forEach(w => w.classList.remove('show'));
+      }
+      const w = document.getElementById(id);
+      if (!w) return;
+      w.classList.add('show');
+      w.style.zIndex = String(Date.now()).slice(-6);
+      taskChip.classList.add('show');
+    }
+
+    function closeWin(id){
+      const w = document.getElementById(id);
+      if (!w) return;
+      w.classList.remove('show');
+      // If none open, hide taskchip
+      const any = [...document.querySelectorAll('.window')].some(x => x.classList.contains('show'));
+      if (!any) taskChip.classList.remove('show');
+    }
+
+    function minWin(id){
+      const w = document.getElementById(id);
+      if (!w) return;
+      w.classList.remove('show');
+      // Task chip stays (like “minimized”)
+      taskChip.classList.add('show');
+    }
+
+    // Icon click handlers
+    document.querySelectorAll('.icon').forEach(icon => {
+      icon.addEventListener('click', () => openWin(icon.dataset.open));
+      icon.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') openWin(icon.dataset.open);
+      });
+    });
+
+    // Window controls
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => closeWin(btn.dataset.close));
+    });
+    document.querySelectorAll('[data-min]').forEach(btn => {
+      btn.addEventListener('click', () => minWin(btn.dataset.min));
+    });
+
+    // Start button = open Watch window (simple)
+    document.getElementById('startBtn').addEventListener('click', () => openWin('watchWin'));
+    taskChip.addEventListener('click', () => openWin('watchWin'));
+
+    // Basic drag to move windows (desktop only)
+    let drag = null;
+    let offsetX = 0, offsetY = 0;
+
+    document.querySelectorAll('.titlebar').forEach(tb => {
+      tb.addEventListener('mousedown', (e) => {
+        if (window.innerWidth <= 860) return;
+        const id = tb.getAttribute('data-drag');
+        const win = document.getElementById(id);
+        if (!win) return;
+        drag = win;
+        drag.style.zIndex = String(Date.now()).slice(-6);
+        const rect = drag.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+      });
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!drag) return;
+      const x = Math.max(8, Math.min(e.clientX - offsetX, window.innerWidth - drag.offsetWidth - 8));
+      const y = Math.max(8, Math.min(e.clientY - offsetY, window.innerHeight - drag.offsetHeight - 58));
+      drag.style.left = x + 'px';
+      drag.style.top = y + 'px';
+    });
+
+    window.addEventListener('mouseup', () => drag = null);
+
+    // Open Watch on first load if user scrolls / interacts and boot is still there (failsafe)
+    window.addEventListener('keydown', (e) => {
+      if (boot.style.display !== 'none' && (e.key === 'Enter')) enter();
+    });
+  </script>
+</body>
+</html>
